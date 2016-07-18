@@ -1,0 +1,17 @@
+.col.l2 > .btn {
+    width: 100%
+}
+.icon-margin-left {
+    margin-left: 20px
+}
+.margin-top-15 {
+    margin-top: 15px
+}
+.filter-span-wrapper {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.filter-span {
+    vertical-align: top;
+}

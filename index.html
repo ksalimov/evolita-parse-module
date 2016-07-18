@@ -1,0 +1,291 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css"
+          media="screen,projection">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body ng-app="mainApp" ng-controller="mainAppCtrl">
+    
+    <div class="container">
+        
+        <div class="switch margin-top-15">
+            <label>
+                Internet
+                <input type="checkbox" ng-model="mode.main">
+                <span class="lever"></span>
+                Database
+            </label>
+        </div>
+
+        <div ng-switch on="mode.main" class="margin-top-15">
+            <div ng-switch-when="false">
+                <div class="row">
+                    <div class="col l8 m12 s12">
+                        <input info-line-compile="company" type="text" ng-model="$parent.company" ng-keyup="$event.keyCode == 13 && getCompany(); appendChip()"
+                               placeholder="Company name or stock symbol" />
+                    </div>
+                    <div class="col l2 m6 s6">
+                        <button info-line-compile class="waves-effect waves-light btn grey"
+                           ng-click="getCompany(); appendChip()">Get</button>
+                    </div>
+                    <div class="col l2 m6 s6">
+                        <button class="waves-effect waves-light btn grey"
+                           ng-click="saveCompany()">Save</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div ng-show="mode.infoLine" class="valign-wrapper">
+                        <div id="chipContainer" class="col l4 m12 s12 valign"></div>
+                        <div class="col l8 m12 s12 valign right-align">
+                            <a href="{{items.SourceLink}}">{{items.SourceLink}}</a>
+                        </div>
+                    </div>
+
+                    <div ng-show="mode.progress" class="col l12 m12 s12 center-align">
+                        <div class="preloader-wrapper small active">
+                            <div class="spinner-layer spinner-blue-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div><div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div><div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-show="mode.noDataError" class="col l12 m12 s12">
+                        <div class="card-panel red lighten-4">
+                            <span>{{message.content}}</span>
+                        </div>
+                    </div>
+
+                    <div ng-show="mode.successMessage" class="col l12 m12 s12 center-align">
+                        <div class="card-panel green lighten-4">
+                            <span>{{message.content}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-switch-when="true">
+                <div class="row">
+                    <div class="col l2 m6 s6 offset-l8">
+                        <a class="waves-effect waves-light btn"
+                            ng-click="getData()">Get</a>
+                    </div>
+                    <div class="col l2 m6 s6">
+                        <a class="waves-effect waves-light btn"
+                            ng-click="saveSvg()">Save</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table id="companiesData" class="responsive-table striped" ng-show="mode.table">
+            <thead>
+                <tr>
+                    <th data-field="checkRow">
+                        <a id="dropdownBtnMarkCheckboxes" class='dropdown-button btn filter-span-wrapper grey lighten-4 grey-text text-darken-2'
+                           data-activates='dropdownMarkCheckboxes' data-constrainwidth="false">
+                            <i class="material-icons" ng-show="mode.checkboxAllUnchecked"
+                               ng-click="checkAll(); $event.stopPropagation()">check_box_outline_blank</i>
+                            <i class="material-icons" ng-show="mode.checkboxIndeterminate"
+                               ng-click="uncheckAll(); $event.stopPropagation()">indeterminate_check_box</i>
+                            <i class="material-icons" ng-show="mode.checkboxAllChecked"
+                               ng-click="uncheckAll(); $event.stopPropagation()">check_box</i>
+                            <i class="material-icons">arrow_drop_down</i>
+                        </a>
+                        <ul id='dropdownMarkCheckboxes' class='dropdown-content'>
+                            <li ng-repeat="item in markCheckboxes">
+                                <a class="grey-text text-darken-1" ng-click="markCheckboxesFunc(item)">{{item}}</a>
+                            </li>
+                        </ul>
+                    </th>
+                    <th data-field="measureName">Measure name</th>
+                    <th data-field="measurePriority">Measure priority</th>
+                    <th data-field="periodName">Period name</th>
+                    <th data-field="periodLevel">Period level</th>
+                    <th data-field="periodValue">Period value</th>
+                    <th data-field="indexValue">Index value</th>
+                    <th data-field="currency">Currency</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <!--Custom Filters-->
+                <tr>
+                    <td>
+                        <a id="dropdownBtnCheckbox" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownCheckbox' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.checkboxClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.checkboxClose">{{getItemCheckbox(filterCheckbox)}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('Checkbox'); $event.stopPropagation()" ng-show="mode.checkboxClose">close</i>
+                        </a>
+                        <ul id='dropdownCheckbox' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns('Checkbox') | unique: 'Checkbox'">
+                                <a class="grey-text text-darken-1" ng-click="filterCheckboxFunc(item.Checkbox)">{{getItemCheckbox(item.Checkbox)}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnMeasureName" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownMeasureName' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.measureNameClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.measureNameClose">{{filterMeasureName}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('MeasureName'); $event.stopPropagation()" ng-show="mode.measureNameClose">close</i>
+                        </a>
+                        <ul id='dropdownMeasureName' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns('MeasureName') | unique: 'MeasureName'">
+                                <a class="grey-text text-darken-1" ng-click="filterMeasureNameFunc(item.MeasureName)">{{item.MeasureName}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnMeasurePriority" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownMeasurePriority' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.measurePriorityClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.measurePriorityClose">{{filterMeasurePriority}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('MeasurePriority'); $event.stopPropagation()" ng-show="mode.measurePriorityClose">close</i>
+                        </a>
+                        <ul id='dropdownMeasurePriority' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('MeasurePriority')) | unique: 'MeasurePriority'">
+                                <a class="grey-text text-darken-1" ng-click="filterMeasurePriorityFunc(item.MeasurePriority)">{{item.MeasurePriority}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnPeriodName" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownPeriodName' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.periodNameClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.periodNameClose">{{filterPeriodName}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('PeriodName'); $event.stopPropagation()" ng-show="mode.periodNameClose">close</i>
+                        </a>
+                        <ul id='dropdownPeriodName' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('PeriodName')) | unique: 'PeriodName'">
+                                <a class="grey-text text-darken-1" ng-click="filterPeriodNameFunc(item.PeriodName)">{{item.PeriodName}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnPeriodLevel" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownPeriodLevel' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.periodLevelClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.periodLevelClose">{{filterPeriodLevel}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('PeriodLevel'); $event.stopPropagation()" ng-show="mode.periodLevelClose">close</i>
+                        </a>
+                        <ul id='dropdownPeriodLevel' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('PeriodLevel')) | unique: 'PeriodLevel'">
+                                <a class="grey-text text-darken-1" ng-click="filterPeriodLevelFunc(item.PeriodLevel)">{{item.PeriodLevel}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnPeriodValue" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownPeriodValue' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.periodValueClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.periodValueClose">{{filterPeriodValue}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('PeriodValue'); $event.stopPropagation()" ng-show="mode.periodValueClose">close</i>
+                        </a>
+                        <ul id='dropdownPeriodValue' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('PeriodValue')) | unique: 'PeriodValue'">
+                                <a class="grey-text text-darken-1" ng-click="filterPeriodValueFunc(item.PeriodValue)">{{item.PeriodValue}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnIndexValue" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownIndexValue' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.indexValueClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.indexValueClose">{{filterIndexValue}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('IndexValue'); $event.stopPropagation()" ng-show="mode.indexValueClose">close</i>
+                        </a>
+                        <ul id='dropdownIndexValue' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('IndexValue')) | unique: 'IndexValue'">
+                                <a class="grey-text text-darken-1" ng-click="filterIndexValueFunc(item.IndexValue)">{{item.IndexValue}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <a id="dropdownBtnCurrency" class='dropdown-button btn filter-span-wrapper grey lighten-2 grey-text text-darken-2'
+                           data-activates='dropdownCurrency' data-constrainwidth="false">
+                            <i class="material-icons" ng-hide="mode.currencyClose">arrow_drop_down</i>
+                            <span class="filter-span" ng-show="mode.currencyClose">{{filterCurrency}}</span>
+                            <i class='material-icons icon-margin-left'
+                               ng-click="clearFilter('Currency'); $event.stopPropagation()" ng-show="mode.currencyClose">close</i>
+                        </a>
+                        <ul id='dropdownCurrency' class='dropdown-content'>
+                            <li ng-repeat="item in attributesForFilterDropdownButton
+                                    | filter: selectItemsFromAllColumns(('Currency')) | unique: 'Currency'">
+                                <a class="grey-text text-darken-1" ng-click="filterCurrencyFunc(item.Currency)">{{item.Currency}}</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr id="{{$index}}" ng-repeat="item in attributesForFilterDropdownButton | filter: selectItems">
+                    <td>
+                        <!--<form action="#">-->
+<!--                            <p>
+                                <input ng-init="itemIndex = getCheckboxForRow(item)" id="{{'checkbox' + $index}}" type="checkbox"
+                                       ng-model="checkboxForRow[itemIndex]" ng-disabled="item.PeriodLevel == '255'"/>
+                                <label for="{{'checkbox' + $index}}"></label>
+                            </p>-->
+
+                            <p>
+                                <input id="{{'checkbox' + $index}}" type="checkbox"
+                                       ng-model="item.Checkbox" ng-change="changeCounter(item.Checkbox)" ng-disabled="item.PeriodLevel == '255'" />
+                                <label for="{{'checkbox' + $index}}"></label>
+                            </p>
+                        <!--</form>-->
+                    </td>
+                    <td>{{item.MeasureName}}</td>
+                    <td>{{item.MeasurePriority}}</td>
+                    <td>{{item.PeriodName}}</td>
+                    <td>{{item.PeriodLevel}}</td>
+                    <td>{{item.PeriodValue}}</td>
+                    <td>{{item.IndexValue}}</td>
+                    <td>{{item.Currency}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="lib/angular-sanitize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
+
+    <script src="mainApp.js"></script>
+
+    <!--<script src="lib/tablefilter.js"></script>-->
+
+<!--    <script language="javascript" type="text/javascript">
+        setFilterGrid("companiesData");
+    </script>-->
+
+</body>
+</html>
+
